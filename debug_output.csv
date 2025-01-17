@@ -1,0 +1,2 @@
+OS,CPU_Count,GPU,Memory,cpu_floating_point,cpu_parallel_processing,memory_allocation,gpu_tensor_operations,gpu_tiny_training_loop,disk_write_time,disk_read_time,ml_grid_search_time,ml_best_score,plot_scatter_plot_time,plot_animation_time,plot_large_image_time
+Darwin,14,Apple M-series GPU,36.0 GB,0.0044901371002197266,3.066918134689331,4.291534423828125e-06,0.00031304359436035156,0.0022611618041992188,0.026035785675048828,0.00410914421081543,14.236164808273315,0.9335001073102921,0.0033388137817382812,0.8699877262115479,0.2208540439605713

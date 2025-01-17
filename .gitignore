@@ -1,0 +1,23 @@
+# Old jupyter
+.ipynb_checkpoints/
+
+# macOS metadata files
+.DS_Store
+benchHUB/.DS_Store
+benchHUB/config/.DS_Store
+
+# Python-related
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Results and temp files
+results/*.csv
+results/*.json
+debug_output.csv
+temp_*

@@ -24,7 +24,9 @@ class BenchmarkResult(Base):
     plot = Column(Text)
     reference_index = Column(Float)
     config_name = Column(Text, nullable=True)
+    uuid = Column(String, unique=True, nullable=False)
 
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Pydantic models
@@ -38,6 +40,7 @@ class BenchmarkPayload(BaseModel):
     plot: dict
     reference_index: float
     config_name: str = "standard"
+    uuid: str
 
 # FastAPI app
 app = FastAPI()
@@ -61,7 +64,8 @@ def submit_result(payload: BenchmarkPayload, db: Session = Depends(get_db)):
         ml=json.dumps(payload.ml),
         plot=json.dumps(payload.plot),
         reference_index=payload.reference_index,
-        config_name=payload.config_name
+        config_name=payload.config_name,
+        uuid=payload.uuid
     )
     db.add(result)
     db.commit()

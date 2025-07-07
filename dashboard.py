@@ -36,9 +36,16 @@ else:
     config_profiles = ["All"] + list(config.CONFIG_PROFILES.keys())
     selected_config_profile = st.sidebar.selectbox("Select Configuration Profile", config_profiles)
 
+    # Filter by UUID
+    uuid_filter = st.sidebar.text_input("Filter by UUID (partial match)")
+
     # Apply configuration profile filter
     if selected_config_profile != "All":
         df = df[df['config_name'] == selected_config_profile]
+
+    # Apply UUID filter
+    if uuid_filter:
+        df = df[df['uuid'].str.contains(uuid_filter, case=False, na=False)]
     
     # Filter by system
     systems = df['system_id'].unique()
@@ -92,7 +99,7 @@ try:
         # Flatten the JSON strings in the leaderboard data
         processed_leaderboard_data = []
         for record in leaderboard_data:
-            flat_record = {"id": record["id"], "reference_index": record["reference_index"], "config_name": record.get("config_name", "Unknown")}
+            flat_record = {"id": record["id"], "reference_index": record["reference_index"], "config_name": record.get("config_name", "Unknown"), "uuid": record.get("uuid", "Unknown")}
             
             # Parse and flatten system_info
             system_info = json.loads(record["system_info"])
@@ -137,8 +144,14 @@ try:
         leaderboard_config_profiles = ["All"] + list(leaderboard_df['config_name'].unique())
         selected_leaderboard_config_profile = st.selectbox("Filter Leaderboard by Configuration Profile", leaderboard_config_profiles)
 
+        # Filter leaderboard by UUID
+        leaderboard_uuid_filter = st.text_input("Filter Leaderboard by UUID (partial match)")
+
         if selected_leaderboard_config_profile != "All":
             leaderboard_df = leaderboard_df[leaderboard_df['config_name'] == selected_leaderboard_config_profile]
+
+        if leaderboard_uuid_filter:
+            leaderboard_df = leaderboard_df[leaderboard_df['uuid'].str.contains(leaderboard_uuid_filter, case=False, na=False)]
 
         st.dataframe(leaderboard_df)
     else:

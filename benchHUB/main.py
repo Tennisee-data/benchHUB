@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 import streamlit as st
+import uuid # Import the uuid module
 from tabulate import tabulate
 import pandas as pd
 from benchHUB.config import config
@@ -93,7 +94,7 @@ def run_and_store():
     db = BenchmarkDB()
 
     # 3. Store results in DB, with an optional note
-    record_id = db.store_results(results, notes="Ran benchmarks on my local machine", config_name=selected_profile_name)
+    record_id = db.store_results(results, notes="Ran benchmarks on my local machine", config_name=selected_profile_name, uuid=results['uuid'])
     print(f"Stored results under record_id: {record_id}")
 
     # 4. (Optional) Fetch them back and print
@@ -196,12 +197,15 @@ if __name__ == '__main__':
     )
     
     results['config_name'] = selected_profile_name # Store the config name with results
+    results['uuid'] = str(uuid.uuid4()) # Generate and store a unique UUID
 
     # Ask user for consent to share results publicly
     share = True # Default to sharing publicly for automated runs
 
     # Save results locally and optionally publicly
     save_results(results, share_public=share)
+
+    print(f"Your benchmark UUID: {results['uuid']}") # Print UUID for the user
 
     # Submit results to the leaderboard
     if share:

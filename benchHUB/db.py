@@ -43,7 +43,8 @@ class BenchmarkDB:
             ml TEXT,
             plot TEXT,
             notes TEXT,
-            config_name TEXT
+            config_name TEXT,
+            uuid TEXT
         )
         """
         with sqlite3.connect(self.db_path) as conn:
@@ -55,7 +56,8 @@ class BenchmarkDB:
         self,
         results: Dict[str, Any],
         notes: str = "",
-        config_name: str = "standard" # Add config_name parameter
+        config_name: str = "standard",
+        uuid: str = None # Add uuid parameter
     ) -> int:
         """
         Store a set of benchmark results in the database.
@@ -91,9 +93,10 @@ class BenchmarkDB:
             ml,
             plot,
             notes,
-            config_name
+            config_name,
+            uuid
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         with sqlite3.connect(self.db_path) as conn:
@@ -108,7 +111,8 @@ class BenchmarkDB:
                 ml_json,
                 plot_json,
                 notes,
-                config_name
+                config_name,
+                uuid
             ])
             conn.commit()
             return cursor.lastrowid
@@ -143,7 +147,8 @@ class BenchmarkDB:
                 "ml": json.loads(row["ml"]) if row["ml"] else None,
                 "plot": json.loads(row["plot"]) if row["plot"] else None,
                 "notes": row["notes"],
-                "config_name": row["config_name"]
+                "config_name": row["config_name"],
+                "uuid": row["uuid"]
             })
         return results
 

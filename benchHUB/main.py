@@ -1,6 +1,7 @@
 #main.py
 import json
 import os
+import os
 from datetime import datetime
 import streamlit as st
 import uuid # Import the uuid module
@@ -212,7 +213,7 @@ if __name__ == '__main__':
         import requests
         try:
             serializable_results = to_serializable(results)
-            response = requests.post("http://127.0.0.1:8000/api/submit", json=serializable_results)
+            response = requests.post("API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000") # Render will provide this", json=serializable_results)
             if response.status_code == 200:
                 print("Results submitted to the leaderboard successfully.")
             else:

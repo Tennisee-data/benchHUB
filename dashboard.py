@@ -3,13 +3,14 @@ import pandas as pd
 import requests
 import json
 import os
+import os
 from benchHUB.parse_benchmark_results import parse_benchmark_results
 from benchHUB.config import config # Import config to access profiles
 
 # Define path to results directory
 RESULTS_DIR = "results"
 print(f"Current working directory: {os.getcwd()}")
-API_URL = "http://127.0.0.1:8000"
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000") # Render will provide this
 
 # Parse benchmark results
 st.title("Benchmark Comparison Dashboard")

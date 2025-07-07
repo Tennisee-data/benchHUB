@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: benchhub-api
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn benchHUB.api:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: benchhub-db
+          property: connectionString
+  - type: web
+    name: benchhub-dashboard
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "streamlit run dashboard.py --server.port $PORT --server.enableCORS false --server.enableXsrfProtection false"
+    envVars:
+      - key: API_URL
+        fromService:
+          name: benchhub-api
+          property: hostport
+databases:
+  - name: benchhub-db
+    databaseName: benchhub_db
+    user: benchhub_user

@@ -5,9 +5,10 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import json
+import os
 
 # Database setup
-DATABASE_URL = "sqlite:///./leaderboard.db"
+DATABASE_URL = os.environ.get("DATABASE_URL") # Render will provide this
 Base = declarative_base()
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -26,7 +27,7 @@ class BenchmarkResult(Base):
     config_name = Column(Text, nullable=True)
     uuid = Column(String, unique=True, nullable=False)
 
-Base.metadata.drop_all(bind=engine)
+# Base.metadata.drop_all(bind=engine) # REMOVE THIS FOR PRODUCTION
 Base.metadata.create_all(bind=engine)
 
 # Pydantic models

@@ -2,30 +2,57 @@
 import platform
 import psutil
 import GPUtil
+import cpuinfo
+import pynvml
 
 def get_system_info():
     """
-    Collect and return system information (OS, CPU, memory, GPU, etc.).
+    Collect and return detailed system information (OS, CPU, memory, GPU, etc.).
     """
+    # CPU Info
+    cpu_info = cpuinfo.get_cpu_info()
+    try:
+        cpu_freq = psutil.cpu_freq()
+    except FileNotFoundError:
+        cpu_freq = None
+
     system_info = {
         'os': platform.system(),
         'os_version': platform.version(),
         'architecture': platform.architecture()[0],
-        'cpu_count': psutil.cpu_count(logical=True),
-        'memory': f"{round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB"
+        'cpu': {
+            'model': cpu_info.get('brand_raw', 'N/A'),
+            'cores': psutil.cpu_count(logical=False),
+            'threads': psutil.cpu_count(logical=True),
+            'frequency_mhz': cpu_freq.current if cpu_freq else 'N/A',
+            'l2_cache_size': cpu_info.get('l2_cache_size', 'N/A'),
+            'l3_cache_size': cpu_info.get('l3_cache_size', 'N/A'),
+        },
+        'memory': {
+            'total_gb': round(psutil.virtual_memory().total / (1024 ** 3), 2),
+            'available_gb': round(psutil.virtual_memory().available / (1024 ** 3), 2),
+            'used_percent': psutil.virtual_memory().percent,
+        }
     }
+
+    # GPU Info
     try:
-        gpu_info = GPUtil.getGPUs()
-        system_info['gpus'] = [
-            {
-                'name': gpu.name,
-                'memory': f"{gpu.memoryTotal} MB",
-                'driver': gpu.driver
+        pynvml.nvmlInit()
+        gpu_count = pynvml.nvmlDeviceGetCount()
+        gpus = []
+        for i in range(gpu_count):
+            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+            gpu_info = {
+                'name': pynvml.nvmlDeviceGetName(handle),
+                'memory_total_mb': pynvml.nvmlDeviceGetMemoryInfo(handle).total / (1024**2),
+                'power_limit_w': pynvml.nvmlDeviceGetEnforcedPowerLimit(handle) / 1000.0,
+                'driver_version': pynvml.nvmlSystemGetDriverVersion()
             }
-            for gpu in gpu_info
-        ]
-    except Exception:
-        system_info['gpus'] = "Could not retrieve GPU information via GPUtil."
+            gpus.append(gpu_info)
+        system_info['gpus'] = gpus
+        pynvml.nvmlShutdown()
+    except pynvml.NVMLError:
+        system_info['gpus'] = "NVIDIA GPU not found or pynvml failed."
 
     # Torch detection
     try:

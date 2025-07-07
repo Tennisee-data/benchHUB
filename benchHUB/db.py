@@ -42,17 +42,20 @@ class BenchmarkDB:
             disk TEXT,
             ml TEXT,
             plot TEXT,
-            notes TEXT
+            notes TEXT,
+            config_name TEXT
         )
         """
         with sqlite3.connect(self.db_path) as conn:
+            conn.execute("DROP TABLE IF EXISTS benchmarks") # Ensure table is fresh
             conn.execute(query)
             conn.commit()
 
     def store_results(
         self,
         results: Dict[str, Any],
-        notes: str = ""
+        notes: str = "",
+        config_name: str = "standard" # Add config_name parameter
     ) -> int:
         """
         Store a set of benchmark results in the database.
@@ -87,9 +90,10 @@ class BenchmarkDB:
             disk,
             ml,
             plot,
-            notes
+            notes,
+            config_name
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
 
         with sqlite3.connect(self.db_path) as conn:
@@ -103,7 +107,8 @@ class BenchmarkDB:
                 disk_json,
                 ml_json,
                 plot_json,
-                notes
+                notes,
+                config_name
             ])
             conn.commit()
             return cursor.lastrowid
@@ -137,7 +142,8 @@ class BenchmarkDB:
                 "disk": json.loads(row["disk"]) if row["disk"] else None,
                 "ml": json.loads(row["ml"]) if row["ml"] else None,
                 "plot": json.loads(row["plot"]) if row["plot"] else None,
-                "notes": row["notes"]
+                "notes": row["notes"],
+                "config_name": row["config_name"]
             })
         return results
 

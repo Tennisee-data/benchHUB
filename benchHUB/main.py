@@ -74,6 +74,15 @@ def run_all_benchmarks(
         'ml': ml_results,
         'plot': plot_results
     }
+
+    # Calculate reference index
+    from benchHUB.reference_index import calculate_reference_index, score_cpu, score_gpu, score_memory
+    cpu_score = score_cpu(cpu_results)
+    gpu_score = score_gpu(gpu_results)
+    memory_score = score_memory(memory_results)
+    reference_index = calculate_reference_index(cpu_score, gpu_score, memory_score)
+    results['reference_index'] = reference_index
+
     return results
 
 def run_and_store():
@@ -84,7 +93,7 @@ def run_and_store():
     db = BenchmarkDB()
 
     # 3. Store results in DB, with an optional note
-    record_id = db.store_results(results, notes="Ran benchmarks on my local machine")
+    record_id = db.store_results(results, notes="Ran benchmarks on my local machine", config_name=selected_profile_name)
     print(f"Stored results under record_id: {record_id}")
 
     # 4. (Optional) Fetch them back and print
@@ -146,14 +155,63 @@ def show_results_web():
     st.title("benchHUB Results")
     st.dataframe(df)  # Scrollable and users can sort columns
 
+def to_serializable(val):
+    if isinstance(val, dict):
+        return {k: to_serializable(v) for k, v in val.items()}
+    if isinstance(val, list):
+        return [to_serializable(i) for i in val]
+    if isinstance(val, (int, float, str, bool)) or val is None:
+        return val
+    return str(val)
+
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run benchHUB benchmarks with a specified configuration profile.")
+    parser.add_argument("--profile", type=str, default=config.DEFAULT_CONFIG_NAME,
+                        help=f"Configuration profile to run (default: {config.DEFAULT_CONFIG_NAME}). Available: {', '.join(config.CONFIG_PROFILES.keys())}")
+    args = parser.parse_args()
+
     validate_configuration()
-    print_configuration()
+    
+    selected_profile_name = args.profile.lower()
+    if selected_profile_name not in config.CONFIG_PROFILES:
+        print(f"Invalid profile name '{selected_profile_name}'. Using default: {config.DEFAULT_CONFIG_NAME}")
+        selected_profile_name = config.DEFAULT_CONFIG_NAME
+    
+    selected_config = config.CONFIG_PROFILES[selected_profile_name]
+
+    print_configuration(selected_config)
     print("Running benchHUB benchmarks...")
-    results = run_all_benchmarks()
+    
+    results = run_all_benchmarks(
+        n_runs=selected_config["N_RUNS"],
+        disk_file_size=selected_config["DISK_FILE_SIZE"],
+        cpu_array_size=selected_config["CPU_ARRAY_SIZE"],
+        memory_shape=selected_config["MEMORY_SHAPE"],
+        gpu_matrix_shape=selected_config["GPU_MATRIX_SHAPE"],
+        animation_frames=selected_config["ANIMATION_FRAMES"],
+        image_shape=selected_config["IMAGE_SHAPE"],
+        plot_points=selected_config["PLOT_POINTS"]
+    )
+    
+    results['config_name'] = selected_profile_name # Store the config name with results
 
     # Ask user for consent to share results publicly
-    share = input("Do you want to share your results publicly? (yes/no): ").strip().lower() == "yes"
+    share = True # Default to sharing publicly for automated runs
 
     # Save results locally and optionally publicly
     save_results(results, share_public=share)
+
+    # Submit results to the leaderboard
+    if share:
+        import requests
+        try:
+            serializable_results = to_serializable(results)
+            response = requests.post("http://127.0.0.1:8000/api/submit", json=serializable_results)
+            if response.status_code == 200:
+                print("Results submitted to the leaderboard successfully.")
+            else:
+                print(f"Failed to submit results to the leaderboard. Status code: {response.status_code}, Response: {response.text}")
+        except requests.exceptions.ConnectionError:
+            print("Could not connect to the leaderboard API.")

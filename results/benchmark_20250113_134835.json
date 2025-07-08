@@ -1,0 +1,45 @@
+{
+    "system_info": {
+        "os": "Darwin",
+        "os_version": "Darwin Kernel Version 24.1.0: Thu Oct 10 21:06:57 PDT 2024; root:xnu-11215.41.3~3/RELEASE_ARM64_T6041",
+        "architecture": "64bit",
+        "cpu_count": 14,
+        "memory": "36.0 GB",
+        "gpus": [],
+        "torch_gpus": {
+            "backend": "MPS",
+            "device_count": 1,
+            "device_names": [
+                "Apple M-series GPU"
+            ]
+        }
+    },
+    "cpu": {
+        "floating_point": 0.004715919494628906,
+        "parallel_processing": 3.126624822616577
+    },
+    "memory": {
+        "allocation": 3.0994415283203125e-06
+    },
+    "gpu": {
+        "tensor_operations": 0.00033211708068847656,
+        "tiny_training_loop": 0.0020589828491210938
+    },
+    "disk": {
+        "write_time": 0.02469015121459961,
+        "read_time": 0.003936290740966797
+    },
+    "ml": {
+        "grid_search_time": 13.99528694152832,
+        "best_params": {
+            "max_depth": 10,
+            "n_estimators": 100
+        },
+        "best_score": 0.8833752776401824
+    },
+    "plot": {
+        "scatter_plot_time": 0.003480195999145508,
+        "animation_time": 0.8496580123901367,
+        "large_image_time": 0.21331000328063965
+    }
+}

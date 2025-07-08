@@ -1,23 +1,55 @@
-# Old jupyter
-.ipynb_checkpoints/
-
-# macOS metadata files
-.DS_Store
-benchHUB/.DS_Store
-benchHUB/config/.DS_Store
-
-# Python-related
-*.pyc
-__pycache__/
-*.pyo
-*.pyd
-
-# Virtual environment
+# --- ENVIRONNEMENTS, PYTHON ---
+# Virtual
+.env
+.env/
+.venv/
 venv/
 env/
+env_old/
 
-# Results and temp files
-results/*.csv
-results/*.json
-debug_output.csv
-temp_*
+# Conda files
+conda_env/
+
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Logs, caches, etc.
+*.log
+.cache/
+pip-wheel-metadata/
+
+# --- DATABASE ---
+# Fichier de base SQLite
+*.db
+
+# Ignore local binary DB backups
+backups/db/
+
+# --- MACOS + IDEs ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# VS Code / IDE config
+.vscode/
+.idea/
+
+# --- STREAMLIT SECRETS ---
+.streamlit/secrets.toml
+.streamlit/secrets.json
+
+# --- OTHERS ---
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# --- STATIC / PUBLIC ---
+# On garde `.static/` (favicon), donc ne pas ignorer
+
+# --- EXCEPTIONS ---
+!.streamlit/secrets_template.toml

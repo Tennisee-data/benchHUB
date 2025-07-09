@@ -3,159 +3,162 @@ import pandas as pd
 import requests
 import json
 import os
-import os
 from benchHUB.parse_benchmark_results import parse_benchmark_results
-from benchHUB.config import config # Import config to access profiles
+from benchHUB.config import config
 
-# Define path to results directory
+# --- Page Configuration ---
+st.set_page_config(layout="wide", page_title="benchHUB Leaderboard")
+
+# --- Environment and Constants ---
 RESULTS_DIR = "results"
-print(f"Current working directory: {os.getcwd()}")
-API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000") # Render will provide this
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
 
-# Parse benchmark results
-st.title("Benchmark Comparison Dashboard")
-st.write("Parsing results from:", RESULTS_DIR)
+# --- Custom CSS for Styling ---
+def load_css():
+    css = """
+    <style>
+        /* General Body */
+        .stApp {
+            background-color: #1E1E1E;
+            color: #FFFFFF;
+        }
+        /* Card styling */
+        .card {
+            border: 1px solid #4A4A4A;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px 0;
+            background-color: #2C2C2C;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        /* Rank styling */
+        .rank {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #1E90FF;
+            text-align: center;
+        }
+        /* Score styling */
+        .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FFFFFF;
+            text-align: right;
+        }
+        /* System info styling */
+        .system-info {
+            font-size: 1.1em;
+            color: #D3D3D3;
+        }
+        .system-info-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        /* UUID styling */
+        .uuid {
+            font-size: 0.8em;
+            color: #808080;
+            font-family: monospace;
+        }
+        /* Section headers */
+        h1, h2, h3 {
+            color: #FFFFFF;
+        }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
-df = parse_benchmark_results(RESULTS_DIR)
+# --- Main Application ---
+load_css()
 
-# Debugging: Display the raw DataFrame
-st.write("### Raw Benchmark Data")
-st.dataframe(df)
+st.title("🏆 benchHUB Online Leaderboard")
 
-# Check if DataFrame is empty
-if df.empty:
-    st.warning("No benchmark results found. Please run some benchmarks first.")
-else:
-    # Ensure timestamp is datetime and sort
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
-    df = df.sort_values(by='timestamp')
-
-    # Sidebar for filtering
-    st.sidebar.title("Filters")
-
-    # Filter by configuration profile
-    config_profiles = ["All"] + list(config.CONFIG_PROFILES.keys())
-    selected_config_profile = st.sidebar.selectbox("Select Configuration Profile", config_profiles)
-
-    # Filter by UUID
-    uuid_filter = st.sidebar.text_input("Filter by UUID (partial match)")
-
-    # Apply configuration profile filter
-    if selected_config_profile != "All":
-        df = df[df['config_name'] == selected_config_profile]
-
-    # Apply UUID filter
-    if uuid_filter:
-        df = df[df['uuid'].str.contains(uuid_filter, case=False, na=False)]
-    
-    # Filter by system
-    systems = df['system_id'].unique()
-    selected_system = st.sidebar.selectbox("Select System", systems)
-    
-    # Filter by benchmark type
-    benchmark_types = ['cpu', 'memory', 'gpu', 'disk', 'ml', 'plot']
-    selected_benchmark = st.sidebar.selectbox("Select Benchmark Type", benchmark_types)
-    
-    # Filtered DataFrame
-    filtered_df = df[df['system_id'] == selected_system]
-    
-    # Display selected benchmark data
-    st.write(f"### {selected_benchmark.upper()} Benchmark Results for {selected_system}")
-    
-    # Extract relevant columns for the selected benchmark
-    benchmark_cols = [col for col in df.columns if col.startswith(selected_benchmark)]
-    
-    if not benchmark_cols:
-        st.warning(f"No data available for benchmark type: {selected_benchmark}")
-    else:
-        # Display data in a table
-        st.dataframe(filtered_df[['timestamp'] + benchmark_cols])
-        
-        # Plotting results
-        st.write("### Performance Over Time")
-        
-        # Allow user to select a metric to plot
-        metric_to_plot = st.selectbox("Select metric to plot", benchmark_cols)
-        
-        if metric_to_plot:
-            # Ensure the metric column is numeric
-            filtered_df[metric_to_plot] = pd.to_numeric(filtered_df[metric_to_plot], errors='coerce')
-            
-            # Drop rows where the metric is NaN (e.g., if conversion failed)
-            plot_data = filtered_df.dropna(subset=[metric_to_plot])
-
-            print(f"Plotting data for {metric_to_plot}:\n{plot_data.set_index('timestamp')[metric_to_plot]}")
-            if not plot_data.empty:
-                st.line_chart(plot_data.set_index('timestamp')[metric_to_plot])
-            else:
-                st.warning(f"No valid numeric data to plot for {metric_to_plot}.")
-
-# Leaderboard
-st.title("Online Leaderboard")
+# --- Leaderboard Section ---
 try:
     response = requests.get(f"{API_URL}/api/leaderboard")
-    if response.status_code == 200:
-        leaderboard_data = response.json()
-        
-        # Flatten the JSON strings in the leaderboard data
-        processed_leaderboard_data = []
-        for record in leaderboard_data:
-            flat_record = {"id": record["id"], "reference_index": record["reference_index"], "config_name": record.get("config_name", "Unknown"), "uuid": record.get("uuid", "Unknown")}
-            
-            # Parse and flatten system_info
-            system_info = json.loads(record["system_info"])
-            flat_record["OS"] = system_info.get("os", "Unknown")
-            flat_record["CPU_Model"] = system_info.get("cpu", {}).get("model", "Unknown CPU")
-            flat_record["GPU_Names"] = system_info.get("gpus", "Unknown GPU")
-            flat_record["Memory_Total_GB"] = system_info.get("memory", {}).get("total_gb", "Unknown")
+    response.raise_for_status()  # Raise an exception for bad status codes
+    leaderboard_data = response.json()
 
-            # Parse and flatten other benchmark results
-            for key in ["cpu", "memory", "gpu", "disk", "ml", "plot"]:
-                if key in record and record[key] is not None:
-                    try:
-                        metrics = json.loads(record[key])
-                        if isinstance(metrics, dict):
-                            if key == "ml":
-                                # Special handling for ML benchmark to flatten timings and best_params
-                                if "timings" in metrics and isinstance(metrics["timings"], dict):
-                                    for timing_key, timing_value in metrics["timings"].items():
-                                        flat_record[f"ml_timings_{timing_key}"] = timing_value
-                                if "best_params" in metrics and isinstance(metrics["best_params"], dict):
-                                    for param_key, param_value in metrics["best_params"].items():
-                                        flat_record[f"ml_best_params_{param_key}"] = param_value
-                                # Add other top-level ML metrics
-                                for metric_name, value in metrics.items():
-                                    if metric_name not in ["timings", "best_params"]:
-                                        flat_record[f"{key}_{metric_name}"] = value
-                            else:
-                                for metric_name, value in metrics.items():
-                                    flat_record[f"{key}_{metric_name}"] = value
-                        else:
-                            flat_record[key] = metrics # For cases where it's a simple value
-                    except json.JSONDecodeError:
-                        flat_record[key] = record[key] # Keep as is if not valid JSON
-                else:
-                    flat_record[key] = None # Ensure key exists even if value is None
-
-            processed_leaderboard_data.append(flat_record)
-
-        leaderboard_df = pd.DataFrame(processed_leaderboard_data)
-
-        # Filter leaderboard by configuration profile
-        leaderboard_config_profiles = ["All"] + list(leaderboard_df['config_name'].unique())
-        selected_leaderboard_config_profile = st.selectbox("Filter Leaderboard by Configuration Profile", leaderboard_config_profiles)
-
-        # Filter leaderboard by UUID
-        leaderboard_uuid_filter = st.text_input("Filter Leaderboard by UUID (partial match)")
-
-        if selected_leaderboard_config_profile != "All":
-            leaderboard_df = leaderboard_df[leaderboard_df['config_name'] == selected_leaderboard_config_profile]
-
-        if leaderboard_uuid_filter:
-            leaderboard_df = leaderboard_df[leaderboard_df['uuid'].str.contains(leaderboard_uuid_filter, case=False, na=False)]
-
-        st.dataframe(leaderboard_df)
+    if not leaderboard_data:
+        st.info("The leaderboard is currently empty. Submit your benchmark to get started!")
     else:
-        st.error("Could not retrieve leaderboard data from the API.")
-except requests.exceptions.ConnectionError:
-    st.error("Could not connect to the leaderboard API. Please make sure the API is running.")
+        # Create a DataFrame for easier filtering
+        processed_data = []
+        for record in leaderboard_data:
+            system_info = json.loads(record.get("system_info", "{}"))
+            cpu_info = json.loads(record.get("cpu", "{}"))
+            gpu_info = json.loads(record.get("gpu", "{}"))
+            mem_info = json.loads(record.get("memory", "{}"))
+
+            processed_data.append({
+                "id": record["id"],
+                "reference_index": record["reference_index"],
+                "config_name": record.get("config_name", "standard"),
+                "uuid": record.get("uuid", "N/A"),
+                "cpu_model": system_info.get("cpu", {}).get("brand_raw", "Unknown CPU"),
+                "gpu_model": ", ".join(system_info.get("gpus", ["Unknown GPU"])),
+                "memory_total": system_info.get("memory", {}).get("total", "N/A")
+            })
+        
+        leaderboard_df = pd.DataFrame(processed_data)
+        
+        # --- Sidebar Filters for Leaderboard ---
+        st.sidebar.title("Leaderboard Filters")
+        config_profiles = ["All"] + list(leaderboard_df['config_name'].unique())
+        selected_config = st.sidebar.selectbox("Filter by Configuration", config_profiles)
+
+        uuid_filter = st.sidebar.text_input("Filter by UUID")
+
+        # Apply filters
+        if selected_config != "All":
+            leaderboard_df = leaderboard_df[leaderboard_df['config_name'] == selected_config]
+        if uuid_filter:
+            leaderboard_df = leaderboard_df[leaderboard_df['uuid'].str.contains(uuid_filter, case=False, na=False)]
+
+        # Display filtered results as cards
+        for index, row in leaderboard_df.iterrows():
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            col1, col2, col3 = st.columns([1, 4, 2])
+
+            with col1:
+                st.markdown(f'<p class="rank">{index + 1}</p>', unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                    <div class="system-info">
+                        <span><span class="system-info-icon">💻</span> {row['cpu_model']}</span><br>
+                        <span><span class="system-info-icon">🎨</span> {row['gpu_model']}</span><br>
+                        <span><span class="system-info-icon">💾</span> {row['memory_total']}</span>
+                    </div>
+                    <div class="uuid">UUID: {row['uuid']}</div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f'<p class="score">{row["reference_index"]:.2f}</p>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+
+
+except requests.exceptions.RequestException as e:
+    st.error(f"Could not connect to the leaderboard API. Please ensure it's running. Error: {e}")
+
+
+# --- Local Benchmark Analysis Section ---
+st.markdown("---")
+st.header("🔬 Analyze Local Benchmark Files")
+
+try:
+    df_local = parse_benchmark_results(RESULTS_DIR)
+
+    if df_local.empty:
+        st.warning("No local benchmark JSON files found in the 'results/' directory.")
+    else:
+        st.dataframe(df_local)
+        st.info("More detailed local analysis features can be added here.")
+
+except Exception as e:
+    st.error(f"Failed to parse local benchmark files. Error: {e}")

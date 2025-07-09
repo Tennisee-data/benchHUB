@@ -21,6 +21,7 @@ services:
         value: 3.13.4
       - key: API_URL
         fromService:
+          type: web
           name: benchhub-api
           property: hostport
 databases:

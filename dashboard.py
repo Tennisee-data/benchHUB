@@ -91,12 +91,15 @@ try:
         for record in leaderboard_data:
             system_info = json.loads(record.get("system_info", "{}"))
             
-            # Correctly extract GPU names. Handle both list and string.
-            gpus = system_info.get("gpus", [])
-            if isinstance(gpus, list) and gpus:
-                gpu_model = ", ".join(gpus)
-            elif isinstance(gpus, dict) and "device_names" in gpus: # Handle torch_gpus format
-                gpu_model = ", ".join(gpus["device_names"])
+            # Correctly parse nested system info
+            cpu_info = system_info.get("cpu", {})
+            mem_info = system_info.get("memory", {})
+            
+            # Handle different possible GPU info structures
+            if "gpus" in system_info and isinstance(system_info["gpus"], list) and system_info["gpus"]:
+                gpu_model = ", ".join([gpu.get("name", "N/A") for gpu in system_info["gpus"]])
+            elif "torch_gpus" in system_info and isinstance(system_info["torch_gpus"], dict):
+                gpu_model = ", ".join(system_info["torch_gpus"].get("device_names", ["N/A"]))
             else:
                 gpu_model = "N/A"
 
@@ -105,48 +108,73 @@ try:
                 "reference_index": record["reference_index"],
                 "config_name": record.get("config_name", "standard"),
                 "uuid": record.get("uuid", "N/A"),
-                "cpu_model": system_info.get("cpu_brand_raw", "Unknown CPU"),
+                "cpu_model": cpu_info.get("model", "Unknown CPU"),
                 "gpu_model": gpu_model,
-                "memory_total": system_info.get("memory", "N/A")
+                "memory_total": f"{mem_info.get('total_gb', 'N/A')} GB"
             })
         
         leaderboard_df = pd.DataFrame(processed_data)
         
         # --- Sidebar Filters for Leaderboard ---
         st.sidebar.title("Leaderboard Filters")
-        config_profiles = ["All"] + list(leaderboard_df['config_name'].unique())
+        # Sort profiles to have a consistent order
+        available_profiles = sorted(leaderboard_df['config_name'].unique())
+        config_profiles = ["All"] + available_profiles
         selected_config = st.sidebar.selectbox("Filter by Configuration", config_profiles)
 
-        uuid_filter = st.sidebar.text_input("Filter by UUID")
+        uuid_filter = st.sidebar.text_input("Filter by UUID (or partial UUID)")
 
-        # Apply filters
-        if selected_config != "All":
-            leaderboard_df = leaderboard_df[leaderboard_df['config_name'] == selected_config]
-        if uuid_filter:
-            leaderboard_df = leaderboard_df[leaderboard_df['uuid'].str.contains(uuid_filter, case=False, na=False)]
-
-        # Display filtered results as cards
-        for index, row in leaderboard_df.iterrows():
+        # --- Display Logic ---
+        
+        # Function to display a single result card
+        def display_card(rank, data_row):
+            score_formatted = f"{int(data_row['reference_index']):,}".replace(",", " ")
             st.markdown('<div class="card">', unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 4, 2])
 
             with col1:
-                st.markdown(f'<p class="rank">{index + 1}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="rank">{rank}</p>', unsafe_allow_html=True)
 
             with col2:
                 st.markdown(f"""
                     <div class="system-info">
-                        <span><span class="system-info-icon">💻</span> {row['cpu_model']}</span><br>
-                        <span><span class="system-info-icon">🎨</span> {row['gpu_model']}</span><br>
-                        <span><span class="system-info-icon">💾</span> {row['memory_total']}</span>
+                        <span><span class="system-info-icon">💻</span> {data_row['cpu_model']}</span><br>
+                        <span><span class="system-info-icon">🎨</span> {data_row['gpu_model']}</span><br>
+                        <span><span class="system-info-icon">💾</span> {data_row['memory_total']}</span>
                     </div>
-                    <div class="uuid">UUID: {row['uuid']}</div>
+                    <div class="uuid">UUID: {data_row['uuid'][:8]}</div>
                 """, unsafe_allow_html=True)
 
             with col3:
-                st.markdown(f'<p class="score">{row["reference_index"]:.2f}</p>', unsafe_allow_html=True)
-            
+                st.markdown(f'<p class="score">{score_formatted}</p>', unsafe_allow_html=True)
+                st.markdown('<p class="score-label" style="text-align: right; color: #808080;">Score</p>', unsafe_allow_html=True)
+
             st.markdown('</div>', unsafe_allow_html=True)
+
+        # Filter by UUID first if provided
+        if uuid_filter:
+            display_df = leaderboard_df[leaderboard_df['uuid'].str.startswith(uuid_filter, na=False)]
+            st.subheader(f"Search Results for '{uuid_filter}'")
+            if display_df.empty:
+                st.warning("No results found for this UUID.")
+            else:
+                for i, row in display_df.iterrows():
+                    display_card(rank="-", data_row=row) # No rank for search results
+        
+        # Display by configuration
+        elif selected_config == "All":
+            for profile in available_profiles:
+                st.subheader(f"{profile.capitalize()} Configuration")
+                profile_df = leaderboard_df[leaderboard_df['config_name'] == profile].sort_values(by='reference_index', ascending=False)
+                for i, row in enumerate(profile_df.iterrows()):
+                    display_card(rank=i + 1, data_row=row[1])
+                st.markdown("---")
+        
+        else: # A specific configuration is selected
+            st.subheader(f"{selected_config.capitalize()} Configuration")
+            display_df = leaderboard_df[leaderboard_df['config_name'] == selected_config].sort_values(by='reference_index', ascending=False)
+            for i, row in enumerate(display_df.iterrows()):
+                display_card(rank=i + 1, data_row=row[1])
 
 
 except requests.exceptions.RequestException as e:

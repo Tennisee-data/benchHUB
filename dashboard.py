@@ -35,6 +35,11 @@ def load_css():
         .card:hover {
             transform: scale(1.02);
         }
+        /* Highlighted card for search result */
+        .highlighted-card {
+            border: 2px solid #1E90FF;
+            background-color: #333A44;
+        }
         /* Rank styling */
         .rank {
             font-size: 2.5em;
@@ -117,8 +122,17 @@ try:
         
         # --- Sidebar Filters for Leaderboard ---
         st.sidebar.title("Leaderboard Filters")
-        # Sort profiles to have a consistent order
-        available_profiles = sorted(leaderboard_df['config_name'].unique())
+        
+        # Define the desired order for profiles
+        profile_order = ["heavy", "standard", "light"]
+        
+        # Get profiles present in the data
+        present_profiles = leaderboard_df['config_name'].unique()
+        
+        # Sort the available profiles according to the desired order
+        available_profiles = [p for p in profile_order if p in present_profiles]
+        
+        # Create the list for the selectbox
         config_profiles = ["All"] + available_profiles
         selected_config = st.sidebar.selectbox("Filter by Configuration", config_profiles)
 
@@ -127,9 +141,10 @@ try:
         # --- Display Logic ---
         
         # Function to display a single result card
-        def display_card(rank, data_row):
+        def display_card(rank, data_row, is_highlighted=False):
             score_formatted = f"{int(data_row['reference_index']):,}".replace(",", " ")
-            st.markdown('<div class="card">', unsafe_allow_html=True)
+            card_class = "card highlighted-card" if is_highlighted else "card"
+            st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
             col1, col2, col3 = st.columns([1, 4, 2])
 
             with col1:
@@ -153,28 +168,53 @@ try:
 
         # Filter by UUID first if provided
         if uuid_filter:
-            display_df = leaderboard_df[leaderboard_df['uuid'].str.startswith(uuid_filter, na=False)]
-            st.subheader(f"Search Results for '{uuid_filter}'")
-            if display_df.empty:
+            search_result_df = leaderboard_df[leaderboard_df['uuid'].str.startswith(uuid_filter, na=False)]
+            
+            if search_result_df.empty:
                 st.warning("No results found for this UUID.")
             else:
-                for i, row in display_df.iterrows():
-                    display_card(rank="-", data_row=row) # No rank for search results
-        
-        # Display by configuration
+                # Get the first found result's info
+                result_row = search_result_df.iloc[0]
+                result_config = result_row['config_name']
+                
+                st.subheader(f"Search Result in '{result_config.capitalize()}' Configuration")
+
+                # Get the full leaderboard for that config and sort it
+                config_df = leaderboard_df[leaderboard_df['config_name'] == result_config].sort_values(
+                    by='reference_index', ascending=False
+                ).reset_index(drop=True)
+
+                # Find the index of our result
+                result_index = config_df[config_df['uuid'] == result_row['uuid']].index[0]
+                
+                # Define the context window
+                context = 2
+                start_index = max(0, result_index - context)
+                end_index = min(len(config_df), result_index + context + 1)
+                
+                # Get the slice of the leaderboard to display
+                contextual_df = config_df.iloc[start_index:end_index]
+                
+                for i, row in contextual_df.iterrows():
+                    rank = i + 1
+                    is_highlighted = (row['uuid'] == result_row['uuid'])
+                    display_card(rank=rank, data_row=row, is_highlighted=is_highlighted)
+
+        # Display by configuration if no UUID search
         elif selected_config == "All":
             for profile in available_profiles:
                 st.subheader(f"{profile.capitalize()} Configuration")
-                profile_df = leaderboard_df[leaderboard_df['config_name'] == profile].sort_values(by='reference_index', ascending=False)
-                for i, row in enumerate(profile_df.iterrows()):
-                    display_card(rank=i + 1, data_row=row[1])
+                profile_df = leaderboard_df[leaderboard_df['config_name'] == profile].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
+                for i, row in profile_df.iterrows():
+                    display_card(rank=i + 1, data_row=row)
                 st.markdown("---")
         
         else: # A specific configuration is selected
             st.subheader(f"{selected_config.capitalize()} Configuration")
-            display_df = leaderboard_df[leaderboard_df['config_name'] == selected_config].sort_values(by='reference_index', ascending=False)
-            for i, row in enumerate(display_df.iterrows()):
-                display_card(rank=i + 1, data_row=row[1])
+            display_df = leaderboard_df[leaderboard_df['config_name'] == selected_config].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
+            for i, row in display_df.iterrows():
+                display_card(rank=i + 1, data_row=row)
+
 
 
 except requests.exceptions.RequestException as e:

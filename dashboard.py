@@ -90,18 +90,24 @@ try:
         processed_data = []
         for record in leaderboard_data:
             system_info = json.loads(record.get("system_info", "{}"))
-            cpu_info = json.loads(record.get("cpu", "{}"))
-            gpu_info = json.loads(record.get("gpu", "{}"))
-            mem_info = json.loads(record.get("memory", "{}"))
+            
+            # Correctly extract GPU names. Handle both list and string.
+            gpus = system_info.get("gpus", [])
+            if isinstance(gpus, list) and gpus:
+                gpu_model = ", ".join(gpus)
+            elif isinstance(gpus, dict) and "device_names" in gpus: # Handle torch_gpus format
+                gpu_model = ", ".join(gpus["device_names"])
+            else:
+                gpu_model = "N/A"
 
             processed_data.append({
                 "id": record["id"],
                 "reference_index": record["reference_index"],
                 "config_name": record.get("config_name", "standard"),
                 "uuid": record.get("uuid", "N/A"),
-                "cpu_model": system_info.get("cpu", {}).get("brand_raw", "Unknown CPU"),
-                "gpu_model": ", ".join(system_info.get("gpus", ["Unknown GPU"])),
-                "memory_total": system_info.get("memory", {}).get("total", "N/A")
+                "cpu_model": system_info.get("cpu_brand_raw", "Unknown CPU"),
+                "gpu_model": gpu_model,
+                "memory_total": system_info.get("memory", "N/A")
             })
         
         leaderboard_df = pd.DataFrame(processed_data)

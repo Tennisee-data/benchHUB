@@ -80,7 +80,12 @@ def load_css():
 # --- Main Application ---
 load_css()
 
-st.title("🏆 benchHUB Online Leaderboard")
+# --- Header and Logo ---
+col1, col2, col3 = st.columns([2, 6, 2])
+with col2:
+    st.image("benchHUB.jpg", use_column_width=True)
+
+st.title("🏆 Online Leaderboard")
 
 # --- Leaderboard Section ---
 try:
@@ -240,31 +245,9 @@ except Exception as e:
 # --- Downloads Section ---
 st.markdown("---")
 st.header("📥 Get the Benchmarker")
-st.write("Download our command-line tool to test your own system and contribute to the leaderboard. The tool is a standalone executable with no installer required.")
+st.write("Visit our official download page to get the command-line tool for your operating system. You can also view the source code and instructions there.")
+st.markdown('<a href="https://tennisee-data.github.io/benchHUB_web/" target="_blank"><button style="width:100%; padding: 10px; background-color: #1E90FF; color: white; border: none; border-radius: 5px; font-size: 1.2em;">Go to Download Page</button></a>', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    st.subheader("For End-Users")
-    st.write("Click the button below to download the appropriate version for your operating system.")
-    st.download_button(
-        label="Download for Windows",
-        data="YOUR_WINDOWS_EXECUTABLE_BYTES_HERE", # Placeholder
-        file_name="benchHUB-windows.exe",
-        mime="application/octet-stream"
-    )
-    st.download_button(
-        label="Download for macOS",
-        data="YOUR_MACOS_EXECUTABLE_BYTES_HERE", # Placeholder
-        file_name="benchHUB-macos",
-        mime="application/octet-stream"
-    )
-    st.info("Note: You may need to grant execution permissions to the file after downloading.")
-
-
-with col2:
-    st.subheader("For Developers")
-    st.write("Access the full source code on GitHub to review, contribute, or build it yourself.")
-    st.markdown('<a href="https://github.com/Tennisee-data/benchHUB" target="_blank"><button style="width:100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">View Source on GitHub</button></a>', unsafe_allow_html=True)
 
 # --- Methodology Section ---
 st.markdown("---")

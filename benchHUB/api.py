@@ -1,11 +1,18 @@
 # benchHUB/api.py
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import json
 import os
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+# Rate Limiter Setup
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/hour"])
 
 # Database setup
 DATABASE_URL = os.environ.get("DATABASE_URL") # Render will provide this
@@ -45,6 +52,10 @@ class BenchmarkPayload(BaseModel):
 
 # FastAPI app
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 
 # Dependency to get DB session
 def get_db():
@@ -55,7 +66,8 @@ def get_db():
         db.close()
 
 @app.post("/api/submit")
-def submit_result(payload: BenchmarkPayload, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def submit_result(request: Request, payload: BenchmarkPayload, db: Session = Depends(get_db)):
     result = BenchmarkResult(
         system_info=json.dumps(payload.system_info),
         cpu=json.dumps(payload.cpu),

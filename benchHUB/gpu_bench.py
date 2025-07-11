@@ -48,10 +48,17 @@ def gpu_tiny_training_loop(epochs: int = 2):
         loss.backward()
         optimizer.step()
 
-def gpu_benchmark(n_runs=3, matrix_shape=(10000, 10000)):
+def gpu_benchmark(config: dict):
     """
-    Perform GPU benchmarks for tensor operations and a small training loop.
+    Perform GPU benchmarks using parameters from a configuration dictionary.
     """
+    matrix_shape = config.get("GPU_MATRIX_SHAPE", (4096, 4096))
+    n_runs = config.get("N_RUNS", 3)
+
+    # Update decorator runs
+    gpu_tensor_operations.n_runs = n_runs
+    gpu_tiny_training_loop.n_runs = n_runs
+
     # Just call the decorated functions once; the decorator will handle multiple runs.
     try:
         # The actual calls (the decorator runs them n_runs times each).

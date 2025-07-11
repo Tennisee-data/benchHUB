@@ -9,19 +9,26 @@ timing_results = {}
 def cpu_task(_):
     """
     A simple CPU-bound task for parallel processing.
-
-    This task performs a sum of squares for a range of numbers 
-    to measure the performance of floating-point operations and 
-    parallel task execution.
+    This task performs a sum of squares for a range of numbers.
     """
     return sum([i**2 for i in range(10000)])
 
 @timing_decorator(n_runs=3, use_median=True, timings=timing_results)
-def floating_point_operations(array_size: int):
-    """Perform a floating-point operation benchmark."""
-    x = np.random.rand(array_size)
-    y = np.random.rand(array_size)
-    _ = np.dot(x, y)  # Just do the dot product
+def calculate_primes(max_number: int):
+    """
+    Calculates prime numbers up to a given maximum.
+    This is a CPU-intensive task with low memory usage.
+    """
+    primes = []
+    for num in range(2, max_number + 1):
+        is_prime = True
+        for i in range(2, int(num**0.5) + 1):
+            if num % i == 0:
+                is_prime = False
+                break
+        if is_prime:
+            primes.append(num)
+    return primes
 
 @timing_decorator(n_runs=3, use_median=True, timings=timing_results)
 def parallel_processing():
@@ -29,25 +36,27 @@ def parallel_processing():
     with Pool(cpu_count()) as pool:
         pool.map(cpu_task, range(cpu_count()))
 
-def cpu_benchmark(n_runs: int = 3, array_size: int = 1_000_000):
+def cpu_benchmark(config: dict):
     """
-    Run CPU benchmarks.
-
-    This function executes the following benchmarks:
-      1. Floating-point operations.
-      2. Parallel processing.
-    
-    Timing results are automatically captured in `timing_results`.
+    Run CPU benchmarks using parameters from a configuration dictionary.
 
     Args:
-        array_size (int): Size of the arrays for floating-point operations.
+        config (dict): A dictionary containing benchmark parameters.
+                       Expected keys: 'CPU_PRIME_LIMIT', 'N_RUNS'.
 
     Returns:
         dict: A dictionary with timing results for each benchmark.
     """
+    prime_limit = config.get("CPU_PRIME_LIMIT", 20000)
+    n_runs = config.get("N_RUNS", 3)
+
+    # Update decorator runs
+    calculate_primes.n_runs = n_runs
+    parallel_processing.n_runs = n_runs
+
     # Run benchmarks
-    print("Starting floating-point operation benchmark...")
-    floating_point_operations(array_size)
+    print("Starting prime calculation benchmark...")
+    calculate_primes(prime_limit)
 
     print("Starting parallel processing benchmark...")
     parallel_processing()

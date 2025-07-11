@@ -18,12 +18,14 @@ __pycache__/
 
 # Logs, caches, etc.
 *.log
+*.csv
 .cache/
 pip-wheel-metadata/
 
 # --- DATABASE ---
 # Fichier de base SQLite
 *.db
+*.db-journal
 
 # Ignore local binary DB backups
 backups/db/
@@ -42,14 +44,19 @@ Icon?
 .streamlit/secrets.toml
 .streamlit/secrets.json
 
-# --- OTHERS ---
+# --- PYINSTALLER & BUILD ARTIFACTS ---
 dist/
 build/
 *.egg-info/
 .eggs/
+*.spec
 
-# --- STATIC / PUBLIC ---
-# On garde `.static/` (favicon), donc ne pas ignorer
+# --- PACKAGING & DISTRIBUTION ---
+benchHUB-package/
+*.zip
+*.png
+*.mp4
 
 # --- EXCEPTIONS ---
 !.streamlit/secrets_template.toml
+!benchHUB.jpg

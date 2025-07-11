@@ -2,22 +2,30 @@
 from fastapi import FastAPI, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import json
 import os
+import uvicorn
+from datetime import datetime
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
+# --- Test Configuration ---
+IS_LOCAL_TEST = not os.environ.get("DATABASE_URL")
+if IS_LOCAL_TEST:
+    print("Running in local test mode with SQLite database.")
+    DATABASE_URL = "sqlite:///./test.db"
+else:
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+
 # Rate Limiter Setup
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/hour"])
 
 # Database setup
-DATABASE_URL = os.environ.get("DATABASE_URL") # Render will provide this
 Base = declarative_base()
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if IS_LOCAL_TEST else {})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class BenchmarkResult(Base):
@@ -33,8 +41,9 @@ class BenchmarkResult(Base):
     reference_index = Column(Float)
     config_name = Column(Text, nullable=True)
     uuid = Column(String, unique=True, nullable=False)
+    timestamp = Column(String, default=datetime.utcnow().isoformat)
 
-# Base.metadata.drop_all(bind=engine) # REMOVE THIS FOR PRODUCTION
+# Create/update the table
 Base.metadata.create_all(bind=engine)
 
 # Pydantic models
@@ -49,13 +58,13 @@ class BenchmarkPayload(BaseModel):
     reference_index: float
     config_name: str = "standard"
     uuid: str
+    timestamp: str
 
 # FastAPI app
 app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
-
 
 # Dependency to get DB session
 def get_db():
@@ -78,7 +87,8 @@ def submit_result(request: Request, payload: BenchmarkPayload, db: Session = Dep
         plot=json.dumps(payload.plot),
         reference_index=payload.reference_index,
         config_name=payload.config_name,
-        uuid=payload.uuid
+        uuid=payload.uuid,
+        timestamp=payload.timestamp
     )
     db.add(result)
     db.commit()
@@ -89,3 +99,7 @@ def submit_result(request: Request, payload: BenchmarkPayload, db: Session = Dep
 def get_leaderboard(db: Session = Depends(get_db)):
     results = db.query(BenchmarkResult).order_by(BenchmarkResult.reference_index.desc()).all()
     return results
+
+if __name__ == "__main__":
+    print("Starting Uvicorn server...")
+    uvicorn.run(app, host="127.0.0.1", port=8000)

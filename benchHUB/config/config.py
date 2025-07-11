@@ -1,47 +1,34 @@
 # config/config.py
 # Contains default configuration variables
 
-# Default configuration
-N_RUNS_DEFAULT = 3
-DISK_FILE_SIZE_DEFAULT = 50_000_000
-CPU_ARRAY_SIZE_DEFAULT = 1_000_000
-MEMORY_SHAPE_DEFAULT = (10_000, 10_000)
-GPU_MATRIX_SHAPE_DEFAULT = (10_000, 10_000)
-ANIMATION_FRAMES = 100
-IMAGE_SHAPE = (4000, 4000)
-PLOT_POINTS_DEFAULT = 100_000
-
 # Define different configuration profiles
 CONFIG_PROFILES = {
+    "light": {
+        "N_RUNS": 3,
+        "DISK_FILE_SIZE": 25_000_000,          # 25MB
+        "CPU_PRIME_LIMIT": 20000,               # Primes up to 20k
+        "MEMORY_ARRAY_SIZE_MB": 100,            # 100MB array copy
+        "GPU_MATRIX_SHAPE": (4096, 4096),       # 4k matrix
+        "ML_N_SAMPLES": 5000,
+        "ML_N_FEATURES": 10,
+    },
     "standard": {
         "N_RUNS": 3,
-        "DISK_FILE_SIZE": 50_000_000,
-        "CPU_ARRAY_SIZE": 1_000_000,
-        "MEMORY_SHAPE": (10_000, 10_000),
-        "GPU_MATRIX_SHAPE": (10_000, 10_000),
-        "ANIMATION_FRAMES": 100,
-        "IMAGE_SHAPE": (4000, 4000),
-        "PLOT_POINTS": 100_000,
-    },
-    "light": {
-        "N_RUNS": 1,
-        "DISK_FILE_SIZE": 10_000_000,
-        "CPU_ARRAY_SIZE": 100_000,
-        "MEMORY_SHAPE": (1_000, 1_000),
-        "GPU_MATRIX_SHAPE": (1_000, 1_000),
-        "ANIMATION_FRAMES": 50,
-        "IMAGE_SHAPE": (1000, 1000),
-        "PLOT_POINTS": 10_000,
+        "DISK_FILE_SIZE": 50_000_000,          # 50MB
+        "CPU_PRIME_LIMIT": 50000,               # Primes up to 50k
+        "MEMORY_ARRAY_SIZE_MB": 250,            # 250MB array copy
+        "GPU_MATRIX_SHAPE": (8192, 8192),       # 8k matrix
+        "ML_N_SAMPLES": 10000,
+        "ML_N_FEATURES": 20,
     },
     "heavy": {
         "N_RUNS": 5,
-        "DISK_FILE_SIZE": 100_000_000,
-        "CPU_ARRAY_SIZE": 5_000_000,
-        "MEMORY_SHAPE": (20_000, 20_000),
-        "GPU_MATRIX_SHAPE": (20_000, 20_000),
-        "ANIMATION_FRAMES": 200,
-        "IMAGE_SHAPE": (8000, 8000),
-        "PLOT_POINTS": 200_000,
+        "DISK_FILE_SIZE": 100_000_000,         # 100MB
+        "CPU_PRIME_LIMIT": 100000,              # Primes up to 100k
+        "MEMORY_ARRAY_SIZE_MB": 500,            # 500MB array copy
+        "GPU_MATRIX_SHAPE": (10000, 10000),      # 10k matrix
+        "ML_N_SAMPLES": 20000,
+        "ML_N_FEATURES": 50,
     },
 }
 

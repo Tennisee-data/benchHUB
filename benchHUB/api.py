@@ -44,6 +44,8 @@ class BenchmarkResult(Base):
     timestamp = Column(String, default=datetime.utcnow().isoformat)
 
 # Create/update the table
+# The following line is for temporary migration. It will be removed.
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Pydantic models

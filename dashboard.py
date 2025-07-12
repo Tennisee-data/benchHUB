@@ -182,7 +182,8 @@ try:
                 """, unsafe_allow_html=True)
 
             with col3:
-                st.markdown(f'<p class="score">{score_formatted}</p>', unsafe_allow_html=True)
+                score_display = f"{score_formatted} 🔥" if rank == 1 else score_formatted
+                st.markdown(f'<p class="score">{score_display}</p>', unsafe_allow_html=True)
                 st.markdown('<p class="score-label" style="text-align: right; opacity: 0.7;">Score</p>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)

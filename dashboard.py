@@ -18,10 +18,9 @@ API_URL = os.environ.get("API_URL", "https://benchhub-api.onrender.com")
 def load_css():
     css = """
     <style>
-        /* Use Streamlit's theme variables for compatibility with light/dark modes */
-        .stApp {
-            background-color: var(--background-color);
-            color: var(--text-color);
+        /* Reduce top padding to move content up */
+        .block-container {
+            padding-top: 2rem;
         }
         
         /* Main container for each leaderboard entry */
@@ -108,6 +107,7 @@ load_css()
 col1, col2, col3 = st.columns([3, 4, 3])
 with col2:
     st.image("benchHUB.png", use_container_width=True)
+    st.caption("Benchmark your hardware for machine learning, data science and AI. See how your hardware rates with others. Download the benchmarker and get an index score.")
 
 st.title("Leaderboard")
 
@@ -210,10 +210,12 @@ try:
                 st.warning("No results found for this UUID.")
         
         elif selected_config == "All":
-            for profile in available_profiles:
+            for i, profile in enumerate(available_profiles):
                 st.markdown(f'<div class="category-header"><h2>{profile.capitalize()} Configuration</h2></div>', unsafe_allow_html=True)
                 profile_df = leaderboard_df[leaderboard_df['config_name'] == profile].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
                 display_leaderboard(profile_df)
+                if i < len(available_profiles) - 1:
+                    st.divider()
         else:
             st.markdown(f'<div class="category-header"><h2>{selected_config.capitalize()} Configuration</h2></div>', unsafe_allow_html=True)
             display_df = leaderboard_df[leaderboard_df['config_name'] == selected_config].sort_values(by='reference_index', ascending=False).reset_index(drop=True)

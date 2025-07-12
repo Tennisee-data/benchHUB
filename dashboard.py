@@ -18,61 +18,74 @@ API_URL = os.environ.get("API_URL", "https://benchhub-api.onrender.com")
 def load_css():
     css = """
     <style>
-        /* General Body */
+        /* Use Streamlit's theme variables for compatibility with light/dark modes */
         .stApp {
-            background-color: #1E1E1E;
-            color: #FFFFFF;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
-        /* Card styling */
+        /* Minimalist card styling */
         .card {
-            border: 1px solid #4A4A4A;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 10px 0;
-            background-color: #2C2C2C;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
+            border: 1px solid var(--secondary-background-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+            background-color: var(--secondary-background-color);
+            transition: box-shadow 0.3s ease-in-out;
         }
         .card:hover {
-            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        /* Highlighted card for search result */
+        /* Highlight for search result */
         .highlighted-card {
-            border: 2px solid #1E90FF;
-            background-color: #333A44;
+            border: 1px solid var(--primary-color);
+            box-shadow: 0 0 8px var(--primary-color);
+        }
+        /* Podium card styling */
+        .podium-card {
+            border: 1px solid gold;
         }
         /* Rank styling */
         .rank {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #1E90FF;
-            text-align: center;
-        }
-        /* Score styling */
-        .score {
             font-size: 2em;
             font-weight: bold;
-            color: #FFFFFF;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        .podium-rank {
+            font-size: 3em;
+            font-weight: bold;
+            text-align: center;
+        }
+        .gold { color: gold; }
+        .silver { color: #C0C0C0; }
+        .bronze { color: #CD7F32; }
+        /* Score styling */
+        .score {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--text-color);
             text-align: right;
         }
         /* System info styling */
         .system-info {
-            font-size: 1.1em;
-            color: #D3D3D3;
-        }
-        .system-info-icon {
-            font-size: 1.5em;
-            margin-right: 10px;
+            font-size: 1em;
+            color: var(--text-color);
+            line-height: 1.6;
         }
         /* UUID styling */
         .uuid {
             font-size: 0.8em;
-            color: #808080;
+            color: var(--text-color);
+            opacity: 0.7;
             font-family: monospace;
         }
         /* Section headers */
         h1, h2, h3 {
-            color: #FFFFFF;
+            color: var(--text-color);
+        }
+        /* Clean up sidebar */
+        .stSidebar {
+            border-right: 1px solid var(--secondary-background-color);
         }
     </style>
     """
@@ -84,9 +97,10 @@ load_css()
 # --- Header and Logo ---
 col1, col2, col3 = st.columns([2, 6, 2])
 with col2:
-    st.image("benchHUB.jpg", use_container_width=True)
+    # Use PNG with alpha channel for better theme integration
+    st.image("benchHUB.png", use_container_width=True)
 
-st.title("🏆 Online Leaderboard")
+st.title("Leaderboard")
 
 # --- Leaderboard Section ---
 try:
@@ -123,67 +137,114 @@ try:
         
         leaderboard_df = pd.DataFrame(processed_data)
         
-        st.sidebar.title("Leaderboard Filters")
+        st.sidebar.header("Filters")
         profile_order = ["heavy", "standard", "light"]
         present_profiles = leaderboard_df['config_name'].unique()
         available_profiles = [p for p in profile_order if p in present_profiles]
         config_profiles = ["All"] + available_profiles
-        selected_config = st.sidebar.selectbox("Filter by Configuration", config_profiles)
-        uuid_filter = st.sidebar.text_input("Filter by UUID (or partial UUID)")
+        selected_config = st.sidebar.selectbox("Configuration", config_profiles)
+        uuid_filter = st.sidebar.text_input("Search by UUID")
+
+        def display_podium(rank, data_row):
+            medals = {"1": "🥇", "2": "🥈", "3": "🥉"}
+            colors = {"1": "gold", "2": "silver", "3": "bronze"}
+            rank_str = str(rank)
+            
+            score_formatted = f"{int(data_row['reference_index']):,}".replace(",", " ")
+            
+            st.markdown(f'<div class="card podium-card" style="border-color: {colors.get(rank_str, "var(--secondary-background-color)")};">', unsafe_allow_html=True)
+            col1, col2, col3 = st.columns([1, 4, 2])
+
+            with col1:
+                st.markdown(f'<p class="podium-rank {colors.get(rank_str, "")}">{medals.get(rank_str, rank_str)}</p>', unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                    <div class="system-info">
+                        <b>CPU:</b> {data_row['cpu_model']}<br>
+                        <b>GPU:</b> {data_row['gpu_model']}<br>
+                        <b>RAM:</b> {data_row['memory_total']}
+                    </div>
+                    <div class="uuid">UUID: {data_row['uuid'][:8]} | {pd.to_datetime(data_row['timestamp']).strftime('%Y-%m-%d')}</div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f'<p class="score">{score_formatted}</p>', unsafe_allow_html=True)
+                st.markdown('<p class="score-label" style="text-align: right; opacity: 0.7;">Score</p>', unsafe_allow_html=True)
+
+            st.markdown('</div>', unsafe_allow_html=True)
 
         def display_card(rank, data_row, is_highlighted=False):
             score_formatted = f"{int(data_row['reference_index']):,}".replace(",", " ")
             card_class = "card highlighted-card" if is_highlighted else "card"
             st.markdown(f'<div class="{card_class}">', unsafe_allow_html=True)
+            
             col1, col2, col3 = st.columns([1, 4, 2])
 
             with col1:
-                st.markdown(f'<p class="rank">{rank}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="rank">#{rank}</p>', unsafe_allow_html=True)
 
             with col2:
                 st.markdown(f"""
                     <div class="system-info">
-                        <span><span class="system-info-icon">💻</span> {data_row['cpu_model']}</span><br>
-                        <span><span class="system-info-icon">🎨</span> {data_row['gpu_model']}</span><br>
-                        <span><span class="system-info-icon">💾</span> {data_row['memory_total']}</span>
+                        <b>CPU:</b> {data_row['cpu_model']}<br>
+                        <b>GPU:</b> {data_row['gpu_model']}<br>
+                        <b>RAM:</b> {data_row['memory_total']}
                     </div>
                     <div class="uuid">UUID: {data_row['uuid'][:8]} | Submitted: {pd.to_datetime(data_row['timestamp']).strftime('%Y-%m-%d %H:%M')}</div>
                 """, unsafe_allow_html=True)
 
             with col3:
                 st.markdown(f'<p class="score">{score_formatted}</p>', unsafe_allow_html=True)
-                st.markdown('<p class="score-label" style="text-align: right; color: #808080;">Score</p>', unsafe_allow_html=True)
+                st.markdown('<p class="score-label" style="text-align: right; opacity: 0.7;">Score</p>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
+
+        def display_leaderboard(df):
+            podium_df = df.head(3)
+            rest_df = df.iloc[3:]
+
+            if not podium_df.empty:
+                st.subheader("Top Performers")
+                for i, row in podium_df.iterrows():
+                    display_podium(rank=i + 1, data_row=row)
+            
+            if not rest_df.empty:
+                st.subheader("All Results")
+                with st.expander("Show all other results...", expanded=True):
+                    for i, row in rest_df.iterrows():
+                        display_card(rank=i + 1, data_row=row)
 
         if uuid_filter:
             search_result_df = leaderboard_df[leaderboard_df['uuid'].str.startswith(uuid_filter, na=False)]
             if not search_result_df.empty:
                 result_row = search_result_df.iloc[0]
                 result_config = result_row['config_name']
-                st.subheader(f"Search Result in '{result_config.capitalize()}' Configuration")
+                st.header(f"Search Result in '{result_config.capitalize()}'")
                 config_df = leaderboard_df[leaderboard_df['config_name'] == result_config].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
                 result_index = config_df[config_df['uuid'] == result_row['uuid']].index[0]
-                context = 2
-                start_index = max(0, result_index - context)
-                end_index = min(len(config_df), result_index + context + 1)
-                contextual_df = config_df.iloc[start_index:end_index]
-                for i, row in contextual_df.iterrows():
-                    display_card(rank=i + 1, data_row=row, is_highlighted=(row['uuid'] == result_row['uuid']))
+                
+                st.subheader("Matching Result")
+                if result_index < 3:
+                    display_podium(rank=result_index + 1, data_row=result_row)
+                else:
+                    display_card(rank=result_index + 1, data_row=result_row, is_highlighted=True)
+                
+                st.info("The full leaderboard for this configuration is shown below.")
+                display_leaderboard(config_df)
+
             else:
                 st.warning("No results found for this UUID.")
         elif selected_config == "All":
             for profile in available_profiles:
-                st.subheader(f"{profile.capitalize()} Configuration")
+                st.header(f"{profile.capitalize()} Configuration")
                 profile_df = leaderboard_df[leaderboard_df['config_name'] == profile].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
-                for i, row in profile_df.iterrows():
-                    display_card(rank=i + 1, data_row=row)
+                display_leaderboard(profile_df)
                 st.markdown("---")
         else:
-            st.subheader(f"{selected_config.capitalize()} Configuration")
+            st.header(f"{selected_config.capitalize()} Configuration")
             display_df = leaderboard_df[leaderboard_df['config_name'] == selected_config].sort_values(by='reference_index', ascending=False).reset_index(drop=True)
-            for i, row in display_df.iterrows():
-                display_card(rank=i + 1, data_row=row)
+            display_leaderboard(display_df)
 
 except requests.exceptions.RequestException as e:
     st.error(f"Could not connect to the leaderboard API. Please ensure it's running. Error: {e}")

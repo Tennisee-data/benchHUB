@@ -107,7 +107,7 @@ load_css()
 col1, col2, col3 = st.columns([3, 4, 3])
 with col2:
     st.image("benchHUB.png", use_container_width=True)
-    st.caption("Benchmark your hardware for machine learning, data science and AI. See how your hardware rates with others. Download the benchmarker and get an index score.")
+    st.markdown('<h3 style="text-align: center;">Benchmark your hardware for machine learning, data science and AI. See how your hardware rates with others. Download the benchmarker and get an index score.</h3>', unsafe_allow_html=True)
 
 st.title("Leaderboard")
 

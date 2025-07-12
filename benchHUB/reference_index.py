@@ -36,7 +36,8 @@ def score_gpu(gpu_results):
         # Handle cases where GPU is not available
         if isinstance(gpu_results, str) or not gpu_results:
             return 0
-        time = gpu_results.get('tensor_operations')
+        # Try both key formats
+        time = gpu_results.get('tensor_operations') or gpu_results.get('gpu_tensor_operations')
         if time is None or time == 0:
             return 0
         return (1.0 / time) * GPU_WEIGHT
@@ -49,7 +50,8 @@ def score_memory(memory_results):
     Bandwidth is a key performance indicator for memory.
     """
     try:
-        time = memory_results.get('bandwidth')
+        # Try both key formats
+        time = memory_results.get('bandwidth') or memory_results.get('memory_bandwidth')
         if time is None or time == 0:
             return 0
         return (1.0 / time) * MEMORY_WEIGHT

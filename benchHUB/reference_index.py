@@ -11,7 +11,9 @@ def calculate_reference_index(cpu_score, gpu_score, memory_score):
     """
     # The scores are already weighted inverses, so we just sum them up.
     # A higher score is better.
-    return (cpu_score + gpu_score + memory_score) * 1000 # Scale for a more readable number
+    # Scale to keep scores under 1000 for better readability
+    raw_score = cpu_score + gpu_score + memory_score
+    return min(raw_score * 0.5, 999.9)  # Cap at 999.9 to stay under 1000
 
 def score_cpu(cpu_results):
     """

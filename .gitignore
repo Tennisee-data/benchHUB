@@ -65,3 +65,4 @@ benchHUB-package/
 !.streamlit/secrets_template.toml
 !benchHUB.jpg
 !README.md
+!DATABASE_MANAGEMENT.md

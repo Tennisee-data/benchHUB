@@ -74,3 +74,15 @@ To add a custom test, follow these steps:
 Create a new Python script in the sub directory benchHUB/ (I know the child should not have the parent's name but, it was such a great name...), e.g., custom_bench.py.
 Define your test logic, ensuring the output matches the format expected by the JSON parser.
 Import and integrate the test in main.py to include it in the benchmarking suite.
+
+## Database Management
+
+For administrators managing the online leaderboard database, see the comprehensive guide:
+
+📖 **[DATABASE_MANAGEMENT.md](DATABASE_MANAGEMENT.md)**
+
+This guide covers:
+- Database cleanup procedures
+- Score validation and maintenance  
+- Production database administration
+- Troubleshooting common issues

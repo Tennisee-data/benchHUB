@@ -25,12 +25,25 @@ st.write(
 st.subheader("2. The Reference Score")
 st.write(
     """
-    A single, simple score is more useful for comparison than a dozen different timings. The **Reference Score** is a weighted average of the most critical performance metrics.
+    A single, simple score is more useful for comparison than a dozen different timings. The **Reference Score** is a weighted composite of the most critical performance metrics.
     
-    The formula is:
-    `Score = ( (1 / CPU_Time) * CPU_Weight ) + ( (1 / GPU_Time) * GPU_Weight ) + ( (1 / Memory_Time) * Memory_Weight )`
+    **Current Formula (v1.0.1+):**
+    ```
+    CPU_Score = (1 / CPU_Time) × 0.4
+    GPU_Score = (1 / GPU_Time) × 0.4  
+    Memory_Score = (1 / Memory_Time) × 0.2
     
-    We use the inverse of the time (1/time) so that faster completion times result in a higher score. The weights are chosen to balance the score based on the perceived importance of each component for general-purpose computing. This creates a single, easy-to-understand number where **higher is better**.
+    Raw_Score = CPU_Score + GPU_Score + Memory_Score
+    Final_Score = min(Raw_Score × 0.5, 999.9)
+    ```
+    
+    **Key Features:**
+    - **Inverse timing**: Faster completion = higher score
+    - **Weighted components**: CPU (40%), GPU (40%), Memory (20%)
+    - **Capped at 999.9**: Ensures scores remain intuitive and comparable
+    - **Security validated**: Server-side verification prevents manipulation
+    
+    This creates a single, easy-to-understand number where **higher is better**, with typical scores ranging from 200-900 depending on hardware and test profile.
     """
 )
 

@@ -6,9 +6,6 @@ import numpy as np
 import logging
 logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
 
-# Set backend before importing pyplot to avoid GUI-related messages
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
 
@@ -31,6 +28,8 @@ def animate_sine_wave(n_frames: int = 100):
     """
     Create a simple sine wave animation and force it to render by saving.
     """
+    # Use non-interactive backend for this function
+    plt.switch_backend("Agg")
 
     fig, ax = plt.subplots()
     x = np.linspace(0, 2 * np.pi, 1000)
@@ -58,6 +57,8 @@ def render_large_image(shape=(4000, 4000)):
     """
     Render a large random image and save to file to ensure actual rendering.
     """
+    # Use non-interactive backend for this function
+    plt.switch_backend("Agg")
     image = np.random.rand(*shape)
 
     fig, ax = plt.subplots()

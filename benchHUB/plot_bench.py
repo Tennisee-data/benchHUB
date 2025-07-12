@@ -1,6 +1,14 @@
 #plot_bench.py
 from benchHUB.utils.timing import timing_decorator
 import numpy as np
+
+# Suppress matplotlib font cache building message
+import logging
+logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
+
+# Set backend before importing pyplot to avoid GUI-related messages
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter, PillowWriter
 
@@ -23,8 +31,6 @@ def animate_sine_wave(n_frames: int = 100):
     """
     Create a simple sine wave animation and force it to render by saving.
     """
-    # Optionally switch to an off-screen backend if you don't want a GUI:
-    plt.switch_backend("Agg")
 
     fig, ax = plt.subplots()
     x = np.linspace(0, 2 * np.pi, 1000)
@@ -52,7 +58,6 @@ def render_large_image(shape=(4000, 4000)):
     """
     Render a large random image and save to file to ensure actual rendering.
     """
-    plt.switch_backend("Agg")
     image = np.random.rand(*shape)
 
     fig, ax = plt.subplots()

@@ -57,6 +57,11 @@ benchHUB-package/
 *.png
 *.mp4
 
+# --- MARKDOWN FILES ---
+# Personal configuration files
+*.md
+
 # --- EXCEPTIONS ---
 !.streamlit/secrets_template.toml
 !benchHUB.jpg
+!README.md

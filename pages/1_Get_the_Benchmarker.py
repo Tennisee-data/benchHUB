@@ -77,7 +77,7 @@ with col2:
 # Installation instructions
 st.subheader("🛠️ Quick Setup")
 st.write("""
-1. **Download** the zip file above
+1. **Download** the zip file above (in Chrome if it gets interrupted go to chrome://downloads/ and resume)
 2. **Unzip** and read the included README.txt
 3. **Run setup.sh** to bypass macOS's Gatekeeper (one-time only)
 4. **Launch** by double-clicking start-benchHUB

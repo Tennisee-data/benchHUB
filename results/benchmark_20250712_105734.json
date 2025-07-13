@@ -1,0 +1,56 @@
+{
+    "system_info": {
+        "os": "Darwin",
+        "os_version": "Darwin Kernel Version 24.4.0: Fri Apr 11 18:32:50 PDT 2025; root:xnu-11417.101.15~117/RELEASE_ARM64_T6041",
+        "architecture": "64bit",
+        "cpu": {
+            "model": "Apple M4 Max",
+            "cores": 14,
+            "threads": 14,
+            "frequency_mhz": "N/A",
+            "l2_cache_size": "N/A",
+            "l3_cache_size": "N/A"
+        },
+        "memory": {
+            "total_gb": 36.0,
+            "available_gb": 17.27,
+            "used_percent": 52.0
+        },
+        "gpus": "NVIDIA GPU not found or pynvml failed.",
+        "torch_gpus": {
+            "backend": "MPS",
+            "device_count": 1,
+            "device_names": [
+                "Apple M-series GPU"
+            ]
+        }
+    },
+    "cpu": {
+        "calculate_primes": 0.006485939025878906,
+        "parallel_processing": 0.7257401943206787
+    },
+    "memory": {
+        "memory_bandwidth": 0.03608298301696777
+    },
+    "gpu": {
+        "gpu_tensor_operations": 0.00023508071899414062,
+        "gpu_tiny_training_loop": 0.002580881118774414
+    },
+    "disk": {
+        "disk_write_read": 0.01292276382446289
+    },
+    "ml": {
+        "create_dataset": 0.0010237693786621094,
+        "train_random_forest": 0.39776086807250977,
+        "model_accuracy": 0.919
+    },
+    "plot": {
+        "generate_scatter_plot": 0.004739999771118164,
+        "animate_sine_wave": 0.9696083068847656,
+        "render_large_image": 0.4530961513519287
+    },
+    "config_name": "light",
+    "uuid": "44613e62-9cca-4900-b36a-1c980326d36d",
+    "timestamp": "2025-07-12T10:57:34.262460",
+    "reference_index": 1768757.8556371985
+}

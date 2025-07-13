@@ -11,7 +11,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     st.subheader("🍎 macOS Download")
-    st.write("**Latest Version: v1.0.1** - Includes scoring fixes and security improvements")
+    st.write("**Latest Version: v1.0.0** - Includes scoring fixes and security improvements")
     
     # Direct download button
     st.markdown('''
@@ -33,7 +33,7 @@ with col1:
     </a>
     ''', unsafe_allow_html=True)
     
-    st.write("**Requirements:** macOS 10.15+ (optimized for Apple Silicon)")
+    st.write("**Requirements:** macOS 10.15+ (optimised for Apple Silicon)")
 
 with col2:
     st.subheader("🔗 Additional Resources")
@@ -79,10 +79,10 @@ st.subheader("🛠️ Quick Setup")
 st.write("""
 1. **Download** the zip file above
 2. **Unzip** and read the included README.txt
-3. **Run setup.sh** to bypass macOS security (one-time only)
+3. **Run setup.sh** to bypass macOS's Gatekeeper (one-time only)
 4. **Launch** by double-clicking start-benchHUB
 
-**Need help?** The README.txt includes detailed setup instructions with two methods for navigating to the folder.
+**Need help?** The README.txt includes detailed setup instructions with two methods for navigating to the folder in a new terminal window.
 """)
 
 # Trust indicators
@@ -97,4 +97,4 @@ st.write("""
 # Alternative link for those who prefer the full website
 st.divider()
 st.write("**Prefer the full download page?**")
-st.markdown('<a href="https://tennisee-data.github.io/benchHUB_web/" target="_blank">Visit benchHUB Website →</a>', unsafe_allow_html=True)
+st.markdown('<a href="https://tennisee-data.github.io/benchHUB_web/" target="_blank">Visit benchHUB on GitHub →</a>', unsafe_allow_html=True)

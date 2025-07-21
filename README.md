@@ -13,6 +13,18 @@ benchHUB is a comprehensive cross-platform benchmarking tool that measures syste
 - **REST API**: FastAPI backend for result submission and leaderboard management
 - **Modular Architecture**: Extensible codebase for adding custom benchmarks
 
+## Screenshots
+
+### Main Leaderboard
+![Home Screenshot](Home%20screenshot%2009.13.19.png)
+
+*The main leaderboard showing ranked systems with medal indicators, reference index scores, and detailed hardware specifications.*
+
+### Navigation & Additional Pages
+![Sidebar Screenshot](sidebar%20screenshot%2009.13.28.png)
+
+*Navigation sidebar and additional pages including download instructions and methodology documentation.*
+
 ## Installation
 
 1. Clone the repository:

@@ -1,5 +1,6 @@
 # disk_bench.py
 import os
+import tempfile
 import psutil
 import numpy as np
 import time
@@ -14,20 +15,18 @@ def disk_benchmark(config: dict):
 
     @timing_decorator(timings=timing_results)
     def disk_write_read(file_size: int):
-        file_name = "temp_benchmark_file"
         if psutil.disk_usage(".").free < file_size:
             raise ValueError("Not enough disk space.")
-        
-        # Write test
-        with open(file_name, 'wb') as f:
-            f.write(np.random.bytes(file_size))
-        
-        # Read test
-        with open(file_name, 'rb') as f:
-            _ = f.read()
-        
-        if os.path.exists(file_name):
-            os.remove(file_name)
+
+        # Use tempfile for secure temp file handling (prevents path traversal risks)
+        with tempfile.NamedTemporaryFile(delete=True, prefix="benchhub_disk_") as tmp:
+            # Write test
+            tmp.write(np.random.bytes(file_size))
+            tmp.flush()
+
+            # Read test
+            tmp.seek(0)
+            _ = tmp.read()
 
     file_size = config.get("DISK_FILE_SIZE", 25_000_000)
     n_runs = config.get("N_RUNS", 3)

@@ -1,4 +1,6 @@
 #plot_bench.py
+import os
+import tempfile
 from benchHUB.utils.timing import timing_decorator
 import numpy as np
 
@@ -47,9 +49,10 @@ def animate_sine_wave(n_frames: int = 100):
         writer = PillowWriter(fps=20)
         extension = "gif"
 
-    # Save the animation
+    # Save the animation using secure temp file
     ani = FuncAnimation(fig, update, frames=n_frames, blit=True)
-    ani.save(f"temp_animation.{extension}", writer=writer)
+    with tempfile.NamedTemporaryFile(delete=True, suffix=f".{extension}", prefix="benchhub_anim_") as tmp:
+        ani.save(tmp.name, writer=writer)
     plt.close(fig)
 
 @timing_decorator(n_runs=3, use_median=True, timings=timing_results)
@@ -63,7 +66,9 @@ def render_large_image(shape=(4000, 4000)):
 
     fig, ax = plt.subplots()
     ax.imshow(image, cmap="gray")
-    fig.savefig("temp_image.png", dpi=80)  # Force rendering
+    # Use secure temp file for rendering
+    with tempfile.NamedTemporaryFile(delete=True, suffix=".png", prefix="benchhub_img_") as tmp:
+        fig.savefig(tmp.name, dpi=80)  # Force rendering
     plt.close(fig)
 
 def plot_benchmark(

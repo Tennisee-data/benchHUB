@@ -35,6 +35,14 @@ def main():
 
         main_app_path = os.path.join(basedir, 'benchHUB-macos')
 
+        # Validate path stays within expected directory (defense against path traversal)
+        real_basedir = os.path.realpath(basedir)
+        real_app_path = os.path.realpath(main_app_path)
+        if not real_app_path.startswith(real_basedir + os.sep):
+            print(f"\n[ERROR] Security error: Invalid application path")
+            time.sleep(5)
+            sys.exit(1)
+
         if not os.path.exists(main_app_path):
             print(f"\n[ERROR] Main application not found at: {main_app_path}")
             print("Please ensure 'benchHUB-macos' is in the same directory as this launcher.")
